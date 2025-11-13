@@ -4,7 +4,7 @@
 #define MQTT_CLIENT_ID "MyMqttClient"
 #define MQTT_SERVER "mqtt.example.org"
 #define MQTT_PORT 1883
-#define MQTT_TOPIC "/mqtt/topic"
+#define MQTT_TOPIC "mqtt/topic"
 #define MQTT_USERNAME "user"
 #define MQTT_PASSWORD "pa$$w0rd"
 #define MQTT_POSITIVE_PUBLISH_INTERVAL_MS 1000
