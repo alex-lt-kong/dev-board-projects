@@ -9,8 +9,9 @@
 #define MQTT_PASSWORD "pa$$w0rd"
 #define MQTT_POSITIVE_PUBLISH_INTERVAL_MS 1000
 #define MQTT_NEGATIVE_PUBLISH_INTERVAL_MS 60000
+#define MQTT_SSL_SET_INSECURE 1
 
-const char* root_ca = R"(
+const char *root_ca = R"(
 -----BEGIN CERTIFICATE-----
 MIIDijCCAxGgAwIBAgISBTSvSClNntOf2PNprdOvDR1aMAoGCCqGSM49BAMDMDIx
 ...

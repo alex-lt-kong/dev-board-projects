@@ -7,6 +7,7 @@
 #define MQTT_TOPIC "/mqtt/topic"
 #define MQTT_USERNAME "user"
 #define MQTT_PASSWORD "pa$$w0rd"
+#define MQTT_SSL_SET_INSECURE 1
 
 const char* root_ca = R"(
 -----BEGIN CERTIFICATE-----

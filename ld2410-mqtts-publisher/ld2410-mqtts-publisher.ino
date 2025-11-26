@@ -3,12 +3,12 @@
 
 #define SERIAL_BAUD_RATE 115200
 
-//Change the communication baud rate here, if necessary
-//#define LD2410_BAUD_RATE 256000
+// Change the communication baud rate here, if necessary
+// #define LD2410_BAUD_RATE 256000
 #include <ArduinoJson.h>
 #include <MyLD2410.h>
-#include <WiFi.h>
 #include <PubSubClient.h>
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <Wire.h>
 
@@ -82,7 +82,9 @@ PubSubClient mqtts_client(wifi_client);
 void setup_wifi(int attempts = 0) {
   const auto max_attempts = 10;
   if (attempts >= max_attempts) {
-    Serial.printf("\nmax_attempts (%d) reached, restarting the device as the last resort\n", max_attempts);
+    Serial.printf("\nmax_attempts (%d) reached, restarting the device as the "
+                  "last resort\n",
+                  max_attempts);
 #if defined(ARDUINO_ARCH_ESP32)
     ESP.restart();
 #elif defined(ARDUINO_ARCH_RP2040)
@@ -91,12 +93,14 @@ void setup_wifi(int attempts = 0) {
   }
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.printf("\nConnecting to WiFi [" WIFI_SSID "] (%d/%d)\n", attempts + 1, max_attempts);
+  Serial.printf("\nConnecting to WiFi [" WIFI_SSID "] (%d/%d)\n", attempts + 1,
+                max_attempts);
 
   for (int i = 0; i < 60; ++i) {
     delay(1000);
     Serial.print(".");
-    if (WiFi.status() != WL_CONNECTED) continue;
+    if (WiFi.status() != WL_CONNECTED)
+      continue;
 
     Serial.println("\nWiFi connected!");
     Serial.print("IP address: ");
@@ -114,7 +118,9 @@ void reconnect_mqtts() {
       setup_wifi();
     }
 
-    Serial.printf("Connecting to MQTT broker " MQTT_SERVER ":%d with MQTT_CLIENT_ID: " MQTT_CLIENT_ID "\n", MQTT_PORT);
+    Serial.printf("Connecting to MQTT broker " MQTT_SERVER
+                  ":%d with MQTT_CLIENT_ID: " MQTT_CLIENT_ID "\n",
+                  MQTT_PORT);
     if (mqtts_client.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
       Serial.println("connected");
     } else {
@@ -131,29 +137,35 @@ void setup() {
   delay(10000);
   Serial.begin(SERIAL_BAUD_RATE);
 #if defined(ARDUINO_ARCH_ESP32)
-  sensorSerial.setPins(0, 1);  // D0, D1 on Nano ESP32
+  sensorSerial.setPins(0, 1); // D0, D1 on Nano ESP32
 #elif defined(ARDUINO_ARCH_RP2040)
-  sensorSerial.setTX(0);  // GP0
-  sensorSerial.setRX(1);  // GP1
+  sensorSerial.setTX(0); // GP0
+  sensorSerial.setRX(1); // GP1
 #else
 #error "Define ARDUINO_ARCH_ESP32 or ARDUINO_ARCH_RP2040"
 #endif
   sensorSerial.begin(LD2410_BAUD_RATE);
 
-
   delay(2000);
   Serial.println(__FILE__);
   if (!sensor.begin()) {
     Serial.println("Failed to communicate with the sensor.");
-    while (true) {}
+    while (true) {
+    }
   }
   //  enhanced (engineering) modes.
   sensor.enhancedMode();
 
   //  delay(next_positive_publish_at);
   setup_wifi();
-  // wifi_client.setInsecure();
+#if defined(MQTT_SSL_SET_INSECURE)
+  Serial.println(
+      "wifi_client.setInsecure(), SSL certificate verification skipped");
+  wifi_client.setInsecure();
+#else
+  Serial.printf("wifi_client.setCACert(): %s\n", root_ca);
   wifi_client.setCACert(root_ca);
+#endif
   mqtts_client.setServer(MQTT_SERVER, MQTT_PORT);
 }
 
@@ -162,13 +174,14 @@ void loop() {
     return;
   const auto t_ms = millis();
 
-  //if (millis < next_positive_publish_at && millis < next_negative_publish_at)
-  //  return;
+  // if (millis < next_positive_publish_at && millis < next_negative_publish_at)
+  //   return;
 
   const auto moving_target_detected = sensor.movingTargetDetected();
   const auto stationary_target_detected = sensor.stationaryTargetDetected();
 
-  const auto is_curr_positive = moving_target_detected || stationary_target_detected;
+  const auto is_curr_positive =
+      moving_target_detected || stationary_target_detected;
   if (!is_prev_positive && !is_curr_positive && t_ms < next_negative_publish_at)
     return;
   if ((is_prev_positive || is_curr_positive) && t_ms < next_positive_publish_at)
@@ -183,14 +196,16 @@ void loop() {
   JsonDocument jsonDoc;
   jsonDoc["stationary_target_detected"] = stationary_target_detected;
   if (stationary_target_detected)
-    jsonDoc["stationary_target_distance_cm"] = sensor.stationaryTargetDistance();
+    jsonDoc["stationary_target_distance_cm"] =
+        sensor.stationaryTargetDistance();
   jsonDoc["moving_target_detected"] = moving_target_detected;
   if (moving_target_detected)
     jsonDoc["moving_target_distance_cm"] = sensor.movingTargetDistance();
 
   String output;
   serializeJson(jsonDoc, output);
-  Serial.printf("Publishing payload [%s] to topic [%s]... ", output.c_str(), MQTT_TOPIC);
+  Serial.printf("Publishing payload [%s] to topic [%s]... ", output.c_str(),
+                MQTT_TOPIC);
 
   std::string msgPackStr;
   size_t size = serializeMsgPack(jsonDoc, msgPackStr);

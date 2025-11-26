@@ -45,7 +45,7 @@ void reconnect_mqtts() {
       setup_wifi();
     }
 
-    Serial.printf("Connecting to MQTT broker " MQTT_SERVER ":%d\n", MQTT_PORT);
+    Serial.printf("Connecting to MQTT broker " MQTT_SERVER ":%d with MQTT_CLIENT_ID: " MQTT_CLIENT_ID "\n", MQTT_PORT);
     if (mqtts_client.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD)) {
       Serial.println("connected");
     } else {
@@ -79,7 +79,13 @@ void setup() {
     while (1) delay(1000);
   }
   setup_wifi();
+#if defined(MQTT_SSL_SET_INSECURE)
+  Serial.println("wifi_client.setInsecure(), SSL certificate verification skipped");
+  wifi_client.setInsecure();
+#else
+  Serial.printf("wifi_client.setCACert(): %s\n", root_ca);
   wifi_client.setCACert(root_ca);
+#endif
   mqtts_client.setServer(MQTT_SERVER, MQTT_PORT);
 }
 
